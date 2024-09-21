@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My_Todos</title>
+    <style>
+        h1 {
+            text-align: center;
+        }
+
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #333;
+        }
+
+        li {
+            float: left;
+        }
+
+        li a {
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+
+        li a:hover {
+            background-color: #111;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        #myTodos {
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+        }
+
+        #myTodos p {
+            margin: 0;
+            padding: 0px;
+        }
+    </style>
+</head>
+
+<body>
+    <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="login.html">Login</a></li>
+        <li><a href="signup.html">Signup</a>
+            <li><a href="index.html" onclick="logout()">Logout</a></li></li>
+    </ul>
+    <h2>My_Todos</h2>
+    <p id="message"></p>
+    <ul id="myTodos">
+    </ul>
+    <script>
+        fetch("http://localhost:1000/myTodos", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.todos) {
+                    data.todos.forEach(todo => {
+                        const todoDiv = document.createElement('div');  // Renamed the todo div to todoDiv
+                        const content = document.createElement('div');
+                        const status = document.createElement('div');
+
+                        // Assuming you have a "todo" data object with title, description, and status properties
+                        const title = document.createElement('p');
+                        title.textContent = todo.title;  // Use the todo object for data
+                        const description = document.createElement('p');
+                        description.textContent = todo.description;
+
+                        content.appendChild(title);
+                        content.appendChild(description);
+
+                        const p_status = document.createElement('p');
+                        p_status.textContent = todo.status;
+                        status.appendChild(p_status);
+
+                        todoDiv.appendChild(content);  // Using todoDiv instead of todo
+                        todoDiv.appendChild(status);
+
+                        if (todo.status === 'open') {
+                            const complete = document.createElement('button');
+                            complete.textContent = 'Complete';
+                            complete.addEventListener('click', function () {
+                                completeTodo(todo._id);  // Use todo object to get the _id
+                            });
+                            status.appendChild(complete);
+
+                            const cancel = document.createElement('button');
+                            cancel.textContent = 'Cancel';
+                            cancel.addEventListener('click', function () {
+                                cancelTodo(todo._id);  // Use todo object to get the _id
+                            });
+                            status.appendChild(cancel);
+                        }
+
+                        todoDiv.style.cssText = 'display: flex; justify-content: space-between; background-color: red; color: white; padding: 10px; margin-bottom: 10px;';
+                        document.getElementById('myTodos').appendChild(todoDiv);  // Append todoDiv instead of todo
+
+                    })
+                }
+                else if (data.message) {
+                    document.getElementById('message').textContent = data.message;
+                }
+                else {
+                    // alert(data.message);
+                    document.getElementById('message').textContent = "Please Login First or Create account";
+                    // window.location.href = 'index.html';
+                }
+            })
+
+        function completeTodo(id) {
+            fetch(`http://localhost:1000/updateTodo/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    status: 'complete',
+
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.todo) {
+                        alert(data.message);
+                        window.location.href = 'mytodos.html';
+                    }
+                    else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => console.log(err));
+        }
+        function cancelTodo(id) {
+            fetch(`http://localhost:1000/updateTodo/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    status: 'cancel',
+
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.todo) {
+                        alert(data.message);
+                        window.location.href = 'mytodos.html';
+                    }
+                    else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => console.log(err));
+        }
+        function logout(){
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>
